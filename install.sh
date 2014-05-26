@@ -4,8 +4,10 @@ echo "Start installing Code Verifier libraries"
 export DEBIAN_FRONTEND=noninteractive
 sudo useradd -d /home/verifiers -m verifiers
 sudo apt-get -q -y update
-sudo apt-get -q -y install openjdk-7-jre openjdk-7-jdk python-scipy python-rpy2 git python-setuptools python-dev build-essential libevent-dev python-gevent r-cran-runit libgnustep-base-dev  gobjc gnustep gnustep-make gnustep-common ruby ant python-pip
+sudo apt-get -q -y install openjdk-7-jre openjdk-7-jdk python-scipy python-rpy2 git python-setuptools python-dev build-essential libevent-dev python-gevent r-cran-runit libgnustep-base-dev  gobjc gnustep gnustep-make gnustep-common ruby ant python-pip curl nodejs-legacy
 sudo apt-get -q -y remove  openjdk-6-jre-lib
+sudo curl --insecure https://www.npmjs.org/install.sh | bash
+sudo npm install -g grunt-cli
 sudo easy_install gserver
 sudo easy_install tornado
 export LANGUAGE=en_US.UTF-8
@@ -21,6 +23,12 @@ cd /home/server
 #sudo echo -e "from rpy2.robjects import r\nr(\"install.packages('testthat','/usr/lib/R/site-library/')\")" >> /home/server/install_r_libraries
 #sudo python /home/server/install_r_libraries >> /var/log/startupscript.log
 sudo git clone git://github.com/SingaporeClouds/scipy-verifier.git
-cd scipy-verifier/installation/
+cd scipy-verifier
+sudo git submodule update --init
+cd nodeserver
+sudo npm install
+sudo mkdir /home/verifiers/nodeserver
+sudo chown verifiers:verifiers -R /home/verifiers
+cd ../installation/
 sudo ./boot.sh
 
