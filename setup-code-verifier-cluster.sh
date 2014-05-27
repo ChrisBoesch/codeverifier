@@ -3,7 +3,7 @@
 # Set project ID
 PROJECT=${PROJECT-"singpath-hd"}
 
-# Set instance zone 
+# Set instance zone
 ZONE=${ZONE-"us-central1-a"}
 
 # Set instance region according to the zone
@@ -36,16 +36,21 @@ echo "   Zone     : $ZONE"
 echo "   Region   : $REGION"
 echo "   TAG      : $TAG"
 echo "   Instance : $VM_COUNT"
-echo 
+echo
 echo "#####################################################################"
 
 echo -e "##################### \n\n Step 1 : Delete existing vms  $INSTANCES_LIST if they exist \n\n ####################"
-gcutil deleteinstance $INSTANCES_LIST --zone=$ZONE --delete_boot_pd --force 2>/dev/null 
+gcutil deleteinstance $INSTANCES_LIST \
+    --zone=$ZONE --delete_boot_pd --force 2>/dev/null
 
 echo -e "##################### \n\n Step 2 : Creating vms  $INSTANCES_LIST \n\n ####################"
-gcutil addinstance $INSTANCES_LIST --metadata_from_file=startup-script:install.sh --project=$PROJECT --machine_type=f1-micro --zone=$ZONE --tags=$TAG --image=backports-debian-7 --auto_delete_boot_disk
+gcutil addinstance $INSTANCES_LIST \
+    --metadata_from_file=startup-script:install.sh \
+    --project=$PROJECT --machine_type=f1-micro \
+    --zone=$ZONE --tags=$TAG --image=backports-debian-7 --auto_delete_boot_disk
 
-# Create a new firewall and apply it to the instances just created 
+
+# Create a new firewall and apply it to the instances just created
 
 echo -e "\n\n##################### \n\nStep 3 : Delete firewall rule $TAG-firewall if it exists \n\n ####################"
 gcutil --project=$PROJECT deletefirewall $TAG-firewall --force 2>/dev/null
@@ -53,12 +58,18 @@ gcutil --project=$PROJECT deletefirewall $TAG-firewall --force 2>/dev/null
 echo -e "\n\n##################### \n\nStep 4 : Create firewall rule $TAG-firewall \n\n ####################"
 gcutil --project=$PROJECT addfirewall $TAG-firewall --target_tags=$TAG --allowed=tcp:80
 
+
 # Add a basic health check object
 echo -e "\n\n##################### \n\nStep 5 : Remove health check object $TAG-healthcheck if it exists \n\n ####################"
 gcutil --project=$PROJECT deletehttphealthcheck $TAG-healthcheck --force 2>/dev/null
 
 echo -e "\n\n##################### \n\nStep 6 : Create health check object $TAG-healthcheck \n\n ####################"
-gcutil --project=$PROJECT addhttphealthcheck $TAG-healthcheck
+gcutil --project=$PROJECT addhttphealthcheck $TAG-healthcheck \
+    --check_interval_sec=20 --check_timeout_sec=15 \
+    --description="Check main verifier" \
+    --healthy_threshold=2 --unhealthy_threshold=3 \
+    --request_path="/aws/basic_health_check"
+
 
 # Create a pool of instances
 echo -e "\n\n##################### \n\nStep 7 : Remove resource pool $TAG-pool if it exists \n\n ####################"
